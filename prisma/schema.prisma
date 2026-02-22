@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model TeacherActivity {
+  id           Int      @id @default(autoincrement())
+  teacherId    String
+  teacherName  String
+  grade        Int
+  subject      String
+  activityType String
+  createdAt    DateTime
+
+  // Layer 1 deduplication: prevents exact-duplicate insertion
+  @@unique([teacherId, grade, subject, activityType, createdAt], name: "unique_activity")
+  @@index([teacherId])
+  @@index([activityType])
+  @@index([createdAt])
+  @@map("teacher_activities")
+}
+
+model DuplicateFlag {
+  id            Int      @id @default(autoincrement())
+  primaryId     Int
+  duplicateId   Int
+  reason        String
+  timeDeltaMins Int
+  createdAt     DateTime @default(now())
+
+  @@map("duplicate_flags")
+}
+
+model InsightCache {
+  id        Int      @id @default(autoincrement())
+  cacheKey  String   @unique
+  content   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("insight_cache")
+}
